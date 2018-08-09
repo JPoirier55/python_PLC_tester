@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <style>
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<button onclick="get()">get</button>
+<button onclick="start_polling(1)">start_poll</button>
+<button onclick="stop_polling(0)">stop_poll</button>
+
+<table style="width:100%">
+    <tr>
+        <th>Inputs</th>
+        <th></th>
+        <th>Outputs</th>
+        <th></th>
+    </tr>
+    <tr>
+        <td>0</td>
+        <td>
+            <input id="ickb0" type="checkbox" onclick="post(0)">
+        </td>
+        <td>
+            0
+        </td>
+        <td>
+            <div id="output_0" style="display: inline-block; width: 50px; height: 50px; background-color: gray;"></div>
+        </td>
+    </tr>
+</table>
+</body>
+<script>
+    var interval;
+    function start_polling(){
+        interval = setInterval(function () {
+            arr = [];
+            $.when(
+                $.ajax({
+                    type: "GET",
+                    url: "/api/get_data",
+                    success: function (response) {
+                        sw_0 = response['output_0'];
+                        sw_1 = response['output_1'];
+                        sw_2 = response['output_2'];
+                        sw_3 = response['output_3'];
+                        arr = [sw_0, sw_1, sw_2, sw_3];
+                    }
+                }).then(function() {
+                    var i;
+                    for (i = 0; i < arr.length; i++) {
+                        if(arr[i] == 1){
+                            $('#output_'+i).css('background-color', 'green');
+                        }else{
+                            $('#output_'+i).css('background-color', 'gray');
+                        }
+                    }
+                }))
+        }, 1000);
+    }
+    function stop_polling(){
+        clearInterval(interval);
+    }
+
+    function get() {
+        $.ajax({
+            type: "GET",
+            url: "/api/get_data",
+            success: function (response) {
+                console.log(response['test']);
+                console.log(response['test2']);
+            }
+        })
+    }
+    function post(switch_num){
+        ckb = $("#ickb"+switch_num).is(':checked');
+        ckb_state = 0;
+        if(ckb){
+            ckb_state = 1;
+        }
+        $.ajax({
+            type: "POST",
+            url: "/api/set_data",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                switch: switch_num,
+                state: ckb_state
+            },
+            success: function(response){
+                console.log(response);
+            }
+        })
+    }
+
+</script>
+
+</html>
